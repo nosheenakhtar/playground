@@ -1,10 +1,16 @@
-SSL certificate config
 
+1.Create a self-signed certificate using openssl:
 
+$ sudo mkdir /etc/nginx/ssl/
+$ sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/nginx/ssl/nginx.key -out /etc/nginx/ssl/nginx.crt
+
+2.Modify /etc/nginx/sites-available/default file like below:
 
 server {
     server_name _;
-    root /var/www/html/index.nginx-debian.html;
+    root /var/www/html;
+    index index.html index.htm index.nginx-debian.html;
+    
 
     access_log /var/log/nginx/default.access.log;
     error_log /var/log/nginx/default.error.log;
@@ -13,3 +19,11 @@ server {
     ssl_certificate /etc/nginx/ssl/nginx.crt;
     ssl_certificate_key /etc/nginx/ssl/nginx.key;
 }
+
+3.Test the configuration
+$ sudo nginx -t
+
+
+4.If there are no syntax errors, reload Nginx to apply the changes by running the following command:
+
+$ sudo systemctl reload nginx
