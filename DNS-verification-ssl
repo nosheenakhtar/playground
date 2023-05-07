@@ -1,1 +1,57 @@
+Installing Certbot on Nginx server
+1.sudo add-apt-repository ppa:certbot/certbot
+2.sudo apt-get update
+3.sudo apt-get install certbot
+
+Running Certbot
+
+sudo ufw allow 443
+
+sudo certbot certonly --manual --preferred-challenge dns -d nginx.explorersight.com
+(after this gives you DNS TXT record name and Its Value  put this name and value on the domain host website where yoy register domain name)
+
+For example :
+Saving debug log to /var/log/letsencrypt/letsencrypt.log
+Requesting a certificate for nginx.explorersight.com
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Please deploy a DNS TXT record under the name:
+
+_acme-challenge.example.com.
+
+with the following value:
+
+e6HshD-ncwcgJK6pcnYEwmW7cvsdcwTi7S_Qkxb14lIWgQsdhcb 
+
+Before continuing, verify the TXT record has been deployed. Depending on the DNS
+provider, this may take some time, from a few seconds to multiple minutes. You can
+check if it has finished deploying with aid of online tools, such as the Google
+Admin Toolbox: https://toolbox.googleapps.com/apps/dig/#TXT/_acme-challenge.nginx.explorersight.com.
+Look for one or more bolded line(s) below the line ';ANSWER'. It should show the
+value(s) you've just added.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Press Enter to Continue
+
+Successfully received certificate.
+Certificate is saved at: /etc/letsencrypt/live/example.com/fullchain.pem
+Key is saved at:         /etc/letsencrypt/live/example.com/privkey.pem
+This certificate expires on yyyy-mm-dd.
+These files will be updated when the certificate renews.
+Next step:
+- This certificate will not be renewed automatically. Autorenewal of --manual certificates requires the use of an authentication hook script (--manual-auth-hook) but one was not provided. To renew this certificate, repeat this same certbot command before the certificate's expiry date.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+After successfully installed certificate then Configure the following file 
+Adding this to /etc/nginx/nginx.conf
+server {
+    listen 443 ssl;
+    ssl_certificate /etc/letsencrypt/live/example.com/privkey.pem;  
+    ssl_certificate_key /etc/letsencrypt/live/example.com/fullchain.pem;
+}
+
+sudo nginx -t
+sudo systemctl reload nginx
+
+
 
