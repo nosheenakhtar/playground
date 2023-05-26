@@ -8,7 +8,7 @@ Running Certbot
 sudo ufw allow 443
 
 sudo certbot certonly --manual --preferred-challenge dns -d nginx.explorersight.com
-(after this gives you DNS TXT record name and Its Value  put this name and value on the domain host website where yoy register domain name)
+(after this gives you DNS TXT record name and Its Value  put this name and value on the domain host website where you register domain name)
 
 For example :
 Saving debug log to /var/log/letsencrypt/letsencrypt.log
