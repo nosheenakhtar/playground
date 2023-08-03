@@ -1,0 +1,90 @@
+first manually run this command on server or locally 
+docker run -it --rm --name certbot -v "/etc/letsencrypt:/etc/letsencrypt":rw -v "/etc/certbot:/var/www/certbot/":rw certbot/certbot certonly --webroot --webroot-path /var/www/certbot/ -d dev.dopagift.com
+default.conf file for nginx to automatically generate ssl certificate using certbot.
+server {
+    listen 80;
+    listen [::]:80;
+
+    server_name dev.dopagift.com;
+    server_tokens off;
+
+    location /.well-known/acme-challenge/ {
+        root  /usr/share/nginx/html/certbot;
+    }
+
+    location / {
+        return 301 https://dev.dopagift.com$request_uri;
+    }
+}
+
+server {
+    listen 443 default_server ssl;
+    listen [::]:443 ssl;
+
+    server_name dev.dopagift.com;
+
+    ssl_certificate /etc/letsencrypt/live/dev.dopagift.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/dev.dopagift.com/privkey.pem;
+    
+    location / {
+    	root   /usr/share/nginx/html;
+        index  index.html index.htm;
+        
+        expires -1;
+    }
+
+    error_page  404              /index.html;
+
+    error_page   500 502 503 504  /50x.html;
+    location = /50x.html {
+        root   /usr/share/nginx/html;
+    }
+}
+cicd for frontend (Docker conatiner)
+name: dopagift-frontend
+on:
+  push:
+    branches: 
+      - develop
+jobs:
+  push_to_ecr:
+    name: Push Docker Image to ECR
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Set up AWS CLI
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-southeast-2
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v2
+      - name: Build and push Docker image
+        run: |
+          docker build -t 579748034965.dkr.ecr.ap-southeast-2.amazonaws.com/dopa-frontend:${{ github.run_number }} .
+          aws ecr get-login-password --region ap-southeast-2 | docker login --username AWS --password-stdin 579748034965.dkr.ecr.ap-southeast-2.amazonaws.com
+          docker images
+          docker push 579748034965.dkr.ecr.ap-southeast-2.amazonaws.com/dopa-frontend:${{ github.run_number }}
+  connect_to_remote_server:
+    needs: push_to_ecr
+    name: Connect to Remote Server
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up SSH aws-access-key-id
+        run: |
+          echo "${{ secrets.PRIVATE_KEY }}" > ./private_key
+          chmod 400 private_key
+               
+      - name: Install SSH server
+        run: |
+          sudo apt-get update
+          sudo apt-get install openssh-server -y
+      - name: Connect to Remote Server and perform actions
+        run: |
+          ssh -o StrictHostKeychecking=no -i private_key ubuntu@3.25.245.89 "export AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY }}; export AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}; aws ecr get-login-password --region ap-southeast-2 | docker login --username AWS --password-stdin 579748034965.dkr.ecr.ap-southeast-2.amazonaws.com"  
+          ssh -o StrictHostKeychecking=no -i private_key ubuntu@3.25.245.89 "docker pull 579748034965.dkr.ecr.ap-southeast-2.amazonaws.com/dopa-frontend:${{ github.run_number }}"
+          ssh -o StrictHostKeychecking=no -i private_key ubuntu@3.25.245.89 "docker stop nginx; docker rm nginx"
+          ssh -o StrictHostKeychecking=no -i private_key ubuntu@3.25.245.89 "docker run --name nginx -d -p 80:80 -p 443:443 --restart always --add-host host.docker.internal:host-gateway -v /etc/localtime:/etc/localtime:ro -v /etc/certbot:/usr/share/nginx/html/certbot:ro -v /etc/letsencrypt:/etc/letsencrypt:ro 579748034965.dkr.ecr.ap-southeast-2.amazonaws.com/dopa-frontend:${{ github.run_number }} "
