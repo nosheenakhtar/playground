@@ -1,0 +1,109 @@
+
+-------------------------- Create static IP for ingress controller in azure
+az aks show --resource-group OZ-RG-Owwll-QA --name Owwll-Test --query nodeResourceGroup -o tsv
+
+az network public-ip create --resource-group RG_mavenx_dev --location=eastus --name demo-public-ip --sku Standard --allocation-method static
+
+172.177.46.181
+-------------------------
+
+Prerequisite
+
+Install chocolaty on windows system
+Install Helm using chocolaty
+
+--------------------------------------------------
+
+1. Install ingress-nginx controller
+
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+helm repo update
+
+helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx --values values.yaml
+helm uninstall ingress-nginx
+
+
+2. Create Namespace in cluseter and install cert-manger using helm
+
+kubectl create namespace cert-manager
+
+helm repo add jetstack https://charts.jetstack.io
+
+helm install cert-manager jetstack/cert-manager --namespace cert-manager --version v1.9.0 --set installCRDs=true
+helm uninstall cert-manager
+
+3. Create Ingress rule
+
+kubectl apply -f .\{env}\ingress.yaml
+
+4. Create ClusterIssuer/Issuer
+
+5. Create Certificate
+
+---- To get Kubeconfig  for creating service endpoint in CI/CD--------
+kubectl config view --flatten > config.yml
+
+-----------------------------
+
+values.yaml file 
+controller:
+  service:
+    annotations:
+      service.beta.kubernetes.io/azure-dns-label-name: web-ingress
+      service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path: /healthz
+      service.beta.kubernetes.io/azure-load-balancer-resource-group: RG_mavenx_dev
+    loadBalancerIP: 23.96.53.132
+
+------------------------------
+
+cluster-issuer.yaml
+
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: ci-demo
+  labels:
+    name: ci-demo
+spec:
+  acme:
+    email: abdul.ghafoor@mavenx.gg
+    privateKeySecretRef:
+      name: ci-demo
+    server: https://acme-v02.api.letsencrypt.org/directory
+    solvers:
+    - http01:
+        ingress:
+        class: nginx
+
+        ------------------------------
+
+        ingress file for all api's
+
+        apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: web-ingress
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+spec:
+  tls:
+    - hosts:
+      - demo.mavenx.gg
+      secretName: scrt-web / scrt-api / etc etc 
+  rules:
+  - host: demo.mavenx.gg
+    http:
+      paths:
+      - path: /(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: mavenxui-service
+            port: 
+              number: 80
+
+---------------------------------
+
