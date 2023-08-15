@@ -1,0 +1,74 @@
+First use these docker commands to generate ssl certifciate manually on server 
+"docker run --rm --name certbot -v "/etc/letsencrypt:/etc/letsencrypt":rw -v "/etc/certbot:/var/www/certbot/":rw certbot/certbot certonly --webroot --webroot-path /var/www/certbot/ -d dev.example.com"
+"docker run --rm --name certbot -v "/etc/letsencrypt:/etc/letsencrypt":rw -v "/etc/certbot:/var/www/certbot/":rw certbot/certbot certonly --webroot --webroot-path /var/www/certbot/ -d api.example.com"
+
+To renew this certificate add this command in your cicd pipeline 
+"docker run --rm --name certbot -v "/etc/letsencrypt:/etc/letsencrypt":rw -v "/etc/certbot:/var/www/certbot/":rw certbot/certbot renew"
+
+
+----------------
+When we deploy Frontend application and Backend Application on same server
+
+use following configuration in #(default.config)
+
+
+server {
+    listen 80;
+    listen [::]:80;
+
+    server_name dev.example.com;
+    server_tokens off;
+
+    location /.well-known/acme-challenge/ {
+        root  /usr/share/nginx/html/certbot;
+    }
+
+    location / {
+        return 301 https://dev.example.com$request_uri;
+    }
+}
+#frontend-config-for-ssl 
+server {
+    listen 443 default_server ssl;
+    listen [::]:443 ssl;
+
+    server_name www.example.com;
+
+    ssl_certificate /etc/letsencrypt/live/dev.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/dev.example.com/privkey.pem;
+    
+    location / {
+    	root   /usr/share/nginx/html;
+        index  index.html index.htm;
+        
+        expires -1;
+    }
+
+    error_page  404              /index.html;
+
+    error_page   500 502 503 504  /50x.html;
+    location = /50x.html {
+        root   /usr/share/nginx/html;
+    }
+}
+#backend-config-for-ssl 
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+
+    server_name api.example.com;
+
+    ssl_certificate /etc/letsencrypt/live/api.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/api.example.com/privkey.pem;
+    
+    location / {
+        proxy_pass http://complete IPaddress on which docker conatiner running;    like 127.0.0.1:8000 etc    
+        proxy_http_version 1.1;
+		proxy_set_header   Upgrade $http_upgrade;
+		proxy_set_header   Connection keep-alive;
+		proxy_set_header   Host $host;
+		proxy_cache_bypass $http_upgrade;
+		proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+		proxy_set_header   X-Forwarded-Proto $scheme;
+    }
+}
