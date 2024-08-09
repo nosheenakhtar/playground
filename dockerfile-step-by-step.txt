@@ -1,0 +1,15 @@
+FROM (base-image)
+
+WORKDIR <directory>
+
+COPY package.json /app/
+
+COPY . .
+
+RUN <command_name>
+
+EXPOSE 9000
+  
+RUN npm install
+
+CMD ["executable","param1","param2",...]   
