@@ -13,3 +13,6 @@ EXPOSE 9000
 RUN npm install
 
 CMD ["executable","param1","param2",...]   
+
+#run this command to create docker image 
+docker build -t <image_name> . 
