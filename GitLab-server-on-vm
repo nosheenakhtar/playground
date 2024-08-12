@@ -1,0 +1,68 @@
+1.	Create VM
+set inbound of VM allow http https ssh and other if you need
+2.	Installing dependencies
+sudo apt update
+sudo apt install ca-certificates curl openssh-server postfix tzdata perl
+
+3.	Installing GitLab
+cd /tmp
+curl -LO https://packages.gitlab.com/install/repositories/gitlab/gitlab-ce/script.deb.sh
+less /tmp/script.deb.sh
+sudo bash /tmp/script.deb.sh
+sudo apt install gitlab-ce
+4.	Adjusting the firewall rules
+sudo ufw status
+ 
+sudo ufw allow http
+sudo ufw allow https
+sudo ufw allow OpenSSH
+again check the status by run the above command sudo ufw status
+then output will be 
+
+ 
+
+5.	  Edit the GitLab configuration File
+sudo vim /etc/gitlab/gitlab.rb
+
+find the line that starts with external_url and uncomment it by removing the # symbol at the beginning of the line:
+external_url 'https://domain name or IP address'
+save changes and exit
+Run theGitLab reconfiguration command to apply the changes 
+sudo gitlab-ctl reconfigure  
+6.	To Activate the UFW (uncomplicated Firewall) on linux(Ubuntu)
+1.install UFW if it’s not already installed
+sudo apt-get install ufw
+2.unable UFW 
+sudo ufw enable
+3.configure the firewall rules
+sudo ufw allow ssh
+sudo ufw allow http
+sudo ufw allow 3000
+4.check the status firewall
+sudo ufw status
+7.	Check your IP address for GitLab 
+for Login use following credentials 
+username: root
+password location: sudo vim /etc/gitlab/initial_root_password
+
+successfully you created a GitLab now 
+
+
+
+8.	Clone Repository and push code to that required repo
+1.Go to the GitLab website and navigate to the repo you want
+       2.Click on the Clone and Copy the URL  (SSH /HTTPS/HTTP) as you want 
+      3.Open that terminal where you want to clone that repo (write cmd in that folder open command prompt) and type this following command
+   =>  git clone (paste repo url) press enter
+Make sure before doing the following setting that your repo has a unprotect branch to push code
+if no then do this step
+
+setting -> repo -> protected branches and unprotect it to make a git push 
+
+4.Initialize the gitlab repo in the root directory of your project 
+   => git init 
+   => git add .
+   => git commit -m “initial commit”
+   => git remote add origin https://gitlab.com/...etc
+    =>git branch -M main
+    => git push -uf origin main
