@@ -11,8 +11,23 @@ RUN <command_name>
 EXPOSE 9000
   
 RUN npm install
+EXPOSE 80
+EXPOSE 443/tcp
+EXPOSE 443/udp
+######This would mean your application uses TCP port 80 by default and TCP/UDP port 443.
 
 CMD ["executable","param1","param2",...]   
 
-#run this command to create docker image 
+#run this command to create docker image (docker build  -t ImageName:TagName dir)
 docker build -t <image_name> . 
+other commands of docker 
+
+docker images  ### check all docker images
+docker ps -a 
+docker ps 
+docker run -p 8080:80 <your_web_server_image>
+$ docker run -p 8080:80 -p 4433:443 <your_app_image>
+
+docker exec -it -d containername bash ##this command is used to enter running container 
+
+
