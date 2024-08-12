@@ -1,0 +1,16 @@
+To Install Docker on Ubuntu 
+1.	sudo apt update
+2.	sudo apt install apt-transport-https ca-certificates curl software-properties-common
+3.	curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add –
+4.	sudo add-apt-repository “deb [arch+amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stables”
+5.	Now update packages index : sudo apt update
+6.	Install docker : sudo apt install docker-ce
+7.	Start docker service : sudo systemctl start docker
+8.	Now check is docker installed successfully ‘ sudo docker run hello-world
+Everything done.
+
+
+If you want to avoid typing sudo whenever you run the docker command, add your username to the docker group:
+
+sudo usermod -aG docker $USER
+  
