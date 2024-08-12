@@ -1,0 +1,25 @@
+Docker Step by step Working:
+Dockerfile instruction for front end websites
+#base image nginx
+FROM nginx
+
+#copy build react app to docker container
+COPY build/* /usr/share/nginx/html
+
+#port 80
+EXPOSE 80
+
+#start nginx server
+CMD [ "nginx", "-g", "daemon off;" ]
+
+Command to build this image
+Docker build -t  my-app .
+
+Docker run cmd:
+Docker run -it -d -p 8080:80 my-app
+
+CMD details:
+docker run to run a new container.
+docker ps to see running and stopped containers.
+docker images to see info about images.
+docker -v to see installed docker version. 
